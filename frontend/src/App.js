@@ -1,6 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, AuthContext } from "./context/AuthContext";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 import Login from "./pages/Login";
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
@@ -22,6 +22,7 @@ export default function App() {
           {/* Protected Routes */}
           <Route element={<PrivateRoute />}>
             <Route path="/user/dashboard" element={<Dashboard />} />
+
             <Route element={<AdminRoute />}>
               <Route path="/admin/dashboard" element={<Dashboard />} />
             </Route>
