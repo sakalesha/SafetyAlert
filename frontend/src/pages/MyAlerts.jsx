@@ -10,7 +10,7 @@ const MyAlerts = () => {
   const fetchMyAlerts = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("/api/alerts/mine", {
+      const res = await axios.get("https://guardianai-crp4.onrender.com/api/alerts/mine", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAlerts(res.data);

@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -8,14 +8,67 @@ export default function CreateAlert() {
     title: "",
     description: "",
     location: "",
+    latitude: "",
+    longitude: "",
   });
+
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [detecting, setDetecting] = useState(false);
 
   const { token } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // 📍 AUTO-GET GPS + REVERSE GEOCODE
+  const detectLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported on your device.");
+      return;
+    }
+
+    setDetecting(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        setForm((prev) => ({
+          ...prev,
+          latitude: lat,
+          longitude: lon,
+        }));
+
+        // Reverse Geocode using OpenStreetMap
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+          );
+          const data = await res.json();
+
+          setForm((prev) => ({
+            ...prev,
+            location: data.display_name || "Location detected",
+          }));
+        } catch (err) {
+          console.log("Reverse geocoding error:", err);
+        }
+
+        setDetecting(false);
+      },
+      (err) => {
+        alert("Location permission denied.");
+        setDetecting(false);
+      }
+    );
+  };
+
+  // Run auto-detect when page loads
+  useEffect(() => {
+    detectLocation();
+  }, []);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -35,21 +88,19 @@ export default function CreateAlert() {
 
     setLoading(true);
     const formData = new FormData();
-    Object.entries(form).forEach(([k, v]) => formData.append(k, v));
+    Object.entries(form).forEach(([key, value]) => formData.append(key, value));
     if (file) formData.append("media", file);
 
     try {
-      await axios.post("http://localhost:5000/api/alerts", formData, {
+      await axios.post("https://guardianai-crp4.onrender.com/api/alerts", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
+
       setSuccess(true);
-      setForm({ title: "", description: "", location: "" });
-      setFile(null);
-      setPreview(null);
-      setTimeout(() => navigate("/dashboard"), 1500);
+      setTimeout(() => navigate("/user/dashboard"), 1500);
     } catch (err) {
       console.error(err);
       alert("❌ Failed to post alert. Please try again.");
@@ -74,7 +125,7 @@ export default function CreateAlert() {
           placeholder="Alert Title"
           value={form.title}
           onChange={handleChange}
-          className="w-full border p-2 mb-3 rounded focus:ring-2 focus:ring-blue-500"
+          className="w-full border p-2 mb-3 rounded"
           required
         />
 
@@ -84,44 +135,43 @@ export default function CreateAlert() {
           rows="3"
           value={form.description}
           onChange={handleChange}
-          className="w-full border p-2 mb-3 rounded focus:ring-2 focus:ring-blue-500"
+          className="w-full border p-2 mb-3 rounded"
           required
         />
 
-        <input
-          type="text"
-          name="location"
-          placeholder="Enter location or landmark"
-          value={form.location}
-          onChange={handleChange}
-          className="w-full border p-2 mb-3 rounded focus:ring-2 focus:ring-blue-500"
-          required
-        />
+        <div className="flex items-center gap-2 mb-3">
+          <input
+            type="text"
+            name="location"
+            placeholder="Enter location or landmark"
+            value={form.location}
+            onChange={handleChange}
+            className="w-full border p-2 rounded"
+            required
+          />
+
+          <button
+            type="button"
+            onClick={detectLocation}
+            className="px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+          >
+            {detecting ? "…" : "📍"}
+          </button>
+        </div>
+
+        <input type="hidden" name="latitude" value={form.latitude} />
+        <input type="hidden" name="longitude" value={form.longitude} />
 
         <div className="mb-3">
-          <label className="block mb-1 font-semibold text-gray-700">
-            Upload Image/Video (optional)
-          </label>
-          <input
-            type="file"
-            accept="image/*,video/*"
-            onChange={handleFileChange}
-            className="w-full border p-2 rounded"
-          />
+          <label className="block mb-1 font-semibold">Upload Image/Video</label>
+          <input type="file" accept="image/*,video/*" onChange={handleFileChange} className="w-full border p-2 rounded" />
+
           {preview && (
             <div className="mt-3">
               {file.type.startsWith("image/") ? (
-                <img
-                  src={preview}
-                  alt="preview"
-                  className="w-full h-40 object-cover rounded"
-                />
+                <img src={preview} alt="preview" className="w-full h-40 object-cover rounded" />
               ) : (
-                <video
-                  src={preview}
-                  controls
-                  className="w-full h-40 rounded"
-                />
+                <video src={preview} controls className="w-full h-40 rounded" />
               )}
             </div>
           )}

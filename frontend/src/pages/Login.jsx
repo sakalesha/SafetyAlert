@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 const LoginPage = () => {
+  const { setUser, setToken } = useContext(AuthContext);
+
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -24,31 +27,25 @@ const LoginPage = () => {
         body: JSON.stringify(formData),
       });
 
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server returned an unexpected response. Please try again later.");
-      }
-
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Invalid email or password.");
 
+      // ✅ UPDATE AUTH CONTEXT (Fixes logout issue)
+      setToken(data.token);
+      setUser(data.user);
+
+      // persist
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      // Navigate based on user role
+      // route based on role
       if (data.user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
       } else {
         navigate("/user/dashboard", { replace: true });
       }
     } catch (err) {
-      if (err.message.includes("Failed to fetch")) {
-        setError("Unable to reach the server. Please check your connection.");
-      } else if (err.message.includes("unexpected")) {
-        setError("Unexpected response from server. Please try again.");
-      } else {
-        setError(err.message || "Something went wrong. Please try again.");
-      }
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -61,7 +58,11 @@ const LoginPage = () => {
           Login to Your Account
         </h2>
 
-        {error && <div className="bg-red-100 text-red-700 p-3 mb-4 rounded-lg text-sm">⚠️ {error}</div>}
+        {error && (
+          <div className="bg-red-100 text-red-700 p-3 mb-4 rounded-lg text-sm">
+            ⚠️ {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email */}
