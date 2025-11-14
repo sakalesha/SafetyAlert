@@ -70,7 +70,7 @@ const AlertDetails = () => {
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         {alert.mediaUrl && (
           <img
-            src={alert.mediaUrl}
+            src={`https://guardianai-crp4.onrender.com${alert.mediaUrl}`}
             alt={alert.title}
             className="w-full h-64 object-cover"
           />

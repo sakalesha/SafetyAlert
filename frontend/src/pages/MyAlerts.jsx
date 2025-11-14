@@ -25,7 +25,7 @@ const MyAlerts = () => {
     if (!window.confirm("Are you sure you want to delete this alert?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`/api/alerts/${id}`, {
+      await axios.delete(`https://guardianai-crp4.onrender.com/api/alerts/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAlerts(alerts.filter((a) => a._id !== id));
@@ -72,9 +72,9 @@ const MyAlerts = () => {
                 </span>
               </div>
 
-              {alert.media && (
+              {alert.mediaUrl && (
                 <img
-                  src={`/uploads/${alert.media}`}
+                  src={`https://guardianai-crp4.onrender.com${alert.mediaUrl}`}
                   alt="alert media"
                   className="mt-3 w-full h-40 object-cover rounded-lg"
                 />

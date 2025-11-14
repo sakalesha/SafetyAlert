@@ -166,7 +166,7 @@ const Dashboard = () => {
               >
                 {alert.mediaUrl && (
                   <img
-                    src={`http://localhost:5000${alert.mediaUrl}`}
+                    src={`https://guardianai-crp4.onrender.com${alert.mediaUrl}`}
                     alt={alert.title}
                     className="h-40 w-full object-cover rounded"
                   />
