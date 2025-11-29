@@ -11,17 +11,15 @@ const AlertDetails = () => {
   const [alert, setAlert] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch alert details
+  const API = "https://guardianai-crp4.onrender.com";
+
   const fetchAlert = async () => {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await axios.get(
-        `https://guardianai-crp4.onrender.com/api/alerts/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await axios.get(`${API}/api/alerts/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       setAlert(res.data);
     } catch (err) {
@@ -32,19 +30,15 @@ const AlertDetails = () => {
     }
   };
 
-  // Delete alert
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this alert?")) return;
 
     try {
       const token = localStorage.getItem("token");
 
-      await axios.delete(
-        `https://guardianai-crp4.onrender.com/api/alerts/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.delete(`${API}/api/alerts/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       toast.success("Alert deleted successfully");
       navigate("/my-alerts");
@@ -58,10 +52,8 @@ const AlertDetails = () => {
     fetchAlert();
   }, [id]);
 
-  // Loading state
   if (loading) return <Loader text="Loading alert details..." />;
 
-  // Not found state
   if (!alert)
     return (
       <div className="text-center mt-20 text-red-600 text-xl">
@@ -69,10 +61,13 @@ const AlertDetails = () => {
       </div>
     );
 
+  const postedTime = alert.createdAt
+    ? new Date(alert.createdAt).toLocaleString()
+    : "Unknown";
+
   return (
     <div className="max-w-3xl mx-auto mt-10 bg-white shadow-lg rounded-2xl p-6 md:p-8">
 
-      {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
         className="px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-100 transition mb-4"
@@ -80,44 +75,36 @@ const AlertDetails = () => {
         ← Back
       </button>
 
-      {/* Title */}
       <h2 className="text-3xl font-bold text-gray-900">{alert.title}</h2>
 
-      {/* Severity Badge */}
       <span
-        className={`
-          inline-block mt-3 px-3 py-1 text-sm font-medium rounded-full
-          ${alert.severity === "High" ? "bg-red-500 text-white" : ""}
-          ${alert.severity === "Medium" ? "bg-yellow-400 text-black" : ""}
-          ${alert.severity === "Low" ? "bg-green-400 text-black" : ""}
-        `}
+        className={`inline-block mt-3 px-3 py-1 text-sm font-medium rounded-full
+        ${alert.severity === "High" ? "bg-red-500 text-white" : ""}
+        ${alert.severity === "Medium" ? "bg-yellow-400 text-black" : ""}
+        ${alert.severity === "Low" ? "bg-green-400 text-black" : ""}
+      `}
       >
-        {alert.severity}
+        {alert.severity || "Medium"}
       </span>
 
-      {/* Description */}
-      <p className="text-gray-700 mt-4 leading-relaxed">{alert.description}</p>
+      <p className="text-gray-700 mt-4">{alert.description}</p>
 
-      {/* Location */}
       <p className="mt-2 text-sm text-gray-600">
         <strong>Location:</strong> {alert.location || "N/A"}
       </p>
 
-      {/* Timestamp */}
       <p className="text-xs text-gray-400 mt-1">
-        Posted on {new Date(alert.createdAt).toLocaleString()}
+        Posted on {postedTime}
       </p>
 
-      {/* Image Preview */}
       {alert.mediaUrl && (
         <img
-          src={`https://guardianai-crp4.onrender.com${alert.mediaUrl}`}
+          src={`${API}${alert.mediaUrl}`}
           alt="alert"
           className="mt-5 w-full h-72 object-cover rounded-xl shadow-md"
         />
       )}
 
-      {/* Actions */}
       <div className="flex justify-end gap-4 mt-8">
         <button
           onClick={() => navigate(`/alerts/edit/${alert._id}`)}
