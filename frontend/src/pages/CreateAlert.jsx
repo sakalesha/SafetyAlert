@@ -97,7 +97,7 @@ export default function CreateAlert() {
     if (file) formData.append("media", file);
 
     try {
-      await axios.post("http://localhost:5000/api/alerts", formData, {
+      await axios.post("https://guardianai-crp4.onrender.com/api/alerts", formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
